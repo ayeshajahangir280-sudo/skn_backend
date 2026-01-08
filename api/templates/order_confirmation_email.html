@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .order-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #555;
+            margin-top: 10px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            font-size: 18px;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .info-value {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .total-section {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 16px;
+        }
+        .total-row.final {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px solid #ddd;
+            padding-top: 15px;
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+        .status {
+            display: inline-block;
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SKN Hair Elegance</h1>
+            <div class="order-number">Order Confirmation #{{ order_id }}</div>
+        </div>
+
+        <p>Hi {{ first_name }},</p>
+        <p>Thank you for your order! We've received your purchase and it's being processed.</p>
+
+        <div class="status">
+            <strong>Order Status: </strong>{{ status }}
+        </div>
+
+        <div class="section">
+            <h2>Order Details</h2>
+            <div class="info-row">
+                <span class="info-label">Order ID:</span>
+                <span class="info-value">#{{ order_id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Order Date:</span>
+                <span class="info-value">{{ created_at|date:"F d, Y H:i" }}</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Items Ordered</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.price|floatformat:2 }}</td>
+                        <td>${{ item.total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>${{ subtotal|floatformat:2 }}</span>
+                </div>
+                <div class="total-row">
+                    <span>Shipping:</span>
+                    <span>${{ shipping|floatformat:2 }}</span>
+                </div>
+                <div class="total-row final">
+                    <span>Total:</span>
+                    <span>${{ total|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Shipping Address</h2>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ first_name }} {{ last_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Address:</span>
+                <span class="info-value">{{ address }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">City:</span>
+                <span class="info-value">{{ city }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Country:</span>
+                <span class="info-value">{{ country }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Postal Code:</span>
+                <span class="info-value">{{ postal_code }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">{{ phone }}</span>
+            </div>
+        </div>
+
+        <p>We will send you a shipping notification with tracking information as soon as your order is dispatched.</p>
+
+        <div class="footer">
+            <p>If you have any questions about your order, please contact us at support@skn-hair-elegance.com</p>
+            <p>&copy; 2024 SKN Hair Elegance. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
