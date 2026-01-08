@@ -111,9 +111,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# WhiteNoise storage for compressed/cached static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 # Media files
 USE_SUPABASE = env.bool('USE_SUPABASE', default=False)
 SUPABASE_KEY = env('SUPABASE_KEY', default='')
@@ -128,12 +125,21 @@ if USE_SUPABASE:
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
     AWS_S3_VERIFY = True
-    
-    DEFAULT_FILE_STORAGE = 'core.storage.SupabaseStorage'
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
-else:
-    MEDIA_URL = '/media/'
+
+# Storage configuration for Django 4.2+ (including 6.0)
+STORAGES = {
+    "default": {
+        "BACKEND": "core.storage.SupabaseStorage" if USE_SUPABASE else "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+if not USE_SUPABASE:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = f"{env('SUPABASE_S3_ENDPOINT_URL', default='')}/{env('SUPABASE_S3_BUCKET_NAME', default='')}/" if USE_SUPABASE else '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

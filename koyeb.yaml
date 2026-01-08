@@ -1,0 +1,7 @@
+version: "1.0"
+services:
+  - name: skn-backend
+    build:
+      type: buildpack
+    run:
+      command: gunicorn core.wsgi
