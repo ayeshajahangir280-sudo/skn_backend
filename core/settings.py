@@ -137,12 +137,13 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Media files
 USE_SUPABASE = env.bool('USE_SUPABASE', default=False)
-SUPABASE_KEY = env('SUPABASE_KEY', default='')
+SUPABASE_SERVICE_ROLE_KEY = env('SUPABASE_SERVICE_ROLE_KEY', default=env('SUPABASE_KEY', default=''))
 
 if USE_SUPABASE:
-    # Supabase Storage (S3-compatible) configuration using Anon Key
+    # Supabase Storage (S3-compatible) configuration using Service Role Key
+    # Service Role Key is required for backend metadata operations (e.g. HeadObject)
     AWS_ACCESS_KEY_ID = 'supabase'
-    AWS_SECRET_ACCESS_KEY = SUPABASE_KEY
+    AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_ROLE_KEY
     AWS_STORAGE_BUCKET_NAME = env('SUPABASE_S3_BUCKET_NAME', default='')
     AWS_S3_ENDPOINT_URL = env('SUPABASE_S3_ENDPOINT_URL', default='')
     AWS_S3_REGION_NAME = env('SUPABASE_S3_REGION_NAME', default='us-east-1')
