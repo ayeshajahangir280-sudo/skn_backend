@@ -13,7 +13,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_name = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
@@ -27,6 +27,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'image', 'video', 'delivery_charges', 'featured', 'bestseller', 
             'images', 'uploaded_images', 'created_at'
         ]
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
 
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])
