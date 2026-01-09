@@ -7,10 +7,22 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name', 'description', 'image']
 
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ['id', 'image']
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.SerializerMethodField()
@@ -29,14 +41,22 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_category_name(self, obj):
-        return obj.category.name if obj.category else None
+        try:
+            if hasattr(obj, 'category') and obj.category:
+                return obj.category.name
+        except Exception:
+            pass
+        return None
 
     def create(self, validated_data):
-        uploaded_images = validated_data.pop('uploaded_images', [])
-        product = Product.objects.create(**validated_data)
-        for image in uploaded_images:
-            ProductImage.objects.create(product=product, image=image)
-        return product
+        try:
+            uploaded_images = validated_data.pop('uploaded_images', [])
+            product = Product.objects.create(**validated_data)
+            for image in uploaded_images:
+                ProductImage.objects.create(product=product, image=image)
+            return product
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
 
 class CollectionSerializer(serializers.ModelSerializer):
     products = serializers.PrimaryKeyRelatedField(
@@ -48,6 +68,12 @@ class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = ['id', 'name', 'description', 'image', 'products']
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
