@@ -135,41 +135,48 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# Media files
+# ===============================
+# Media files / Supabase Storage
+# ===============================
+
 USE_SUPABASE = env.bool('USE_SUPABASE', default=False)
-SUPABASE_SERVICE_ROLE_KEY = env('SUPABASE_SERVICE_ROLE_KEY', default=env('SUPABASE_KEY', default=''))
 
 if USE_SUPABASE:
-    # Supabase Storage (S3-compatible) configuration using Service Role Key
-    # Service Role Key is required for backend metadata operations (e.g. HeadObject)
     SUPABASE_URL = env("SUPABASE_URL")
-SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY")
+    SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY")
 
-AWS_ACCESS_KEY_ID = "supabase"
-AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_ROLE_KEY
-AWS_STORAGE_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME")
-AWS_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL")
-AWS_S3_REGION_NAME = "us-east-1"
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_S3_VERIFY = True
+    AWS_ACCESS_KEY_ID = "supabase"
+    AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_ROLE_KEY
+    AWS_STORAGE_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME")
+    AWS_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL")
 
-MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
+    AWS_S3_REGION_NAME = "us-east-1"
+    AWS_S3_ADDRESSING_STYLE = "path"
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_S3_VERIFY = True
 
-# Storage configuration for Django 4.2+ (including 6.0)
+    MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
+
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = '/media/'
+
+
+# ===============================
+# Storage configuration
+# ===============================
 STORAGES = {
     "default": {
-        "BACKEND": "core.storage.SupabaseStorage" if USE_SUPABASE else "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "core.storage.SupabaseStorage"
+        if USE_SUPABASE
+        else "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-
-if not USE_SUPABASE:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-MEDIA_URL = f"{env('SUPABASE_S3_ENDPOINT_URL', default='')}/{env('SUPABASE_S3_BUCKET_NAME', default='')}/" if USE_SUPABASE else '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
