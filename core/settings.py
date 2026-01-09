@@ -175,9 +175,7 @@ else:
 # ===============================
 STORAGES = {
     "default": {
-        "BACKEND": "core.storage.SupabaseStorage"
-        if USE_SUPABASE
-        else "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
