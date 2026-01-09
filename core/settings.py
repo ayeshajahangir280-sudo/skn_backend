@@ -25,6 +25,8 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-default-change-me-in-pro
 DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['*']
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 
 # Application definition
 
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'api',
+    'payments',
 ]
 
 MIDDLEWARE = [
