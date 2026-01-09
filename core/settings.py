@@ -1,7 +1,12 @@
 import os
+import certifi
 from pathlib import Path
 import environ
 import dj_database_url
+
+# Force SSL certificates to be found
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
 # Initialize environ
 env = environ.Env(
@@ -19,7 +24,7 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-default-change-me-in-pro
 
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '.koyeb.app'])
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -53,17 +58,32 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'core.urls'
 
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://localhost:5173", # Common Vite port
-    "http://127.0.0.1:5173",
-    "https://skn-admin.vercel.app",
+CORS_ORIGIN_ALLOW_ALL = True # For backward compatibility
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://skn-admin.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
-CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
