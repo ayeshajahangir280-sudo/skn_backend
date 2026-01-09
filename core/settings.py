@@ -142,14 +142,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Media files / Supabase Storage
 # ===============================
 
+
 USE_SUPABASE = env.bool('USE_SUPABASE', default=False)
 
 if USE_SUPABASE:
     SUPABASE_URL = env("SUPABASE_URL")
-    SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY")
 
-    AWS_ACCESS_KEY_ID = "supabase"
-    AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_ROLE_KEY
+    # NEW: real S3 access keys from Supabase Storage → Settings → S3 access keys
+    SUPABASE_S3_ACCESS_KEY_ID = env("SUPABASE_S3_ACCESS_KEY_ID")
+    SUPABASE_S3_SECRET_ACCESS_KEY = env("SUPABASE_S3_SECRET_ACCESS_KEY")
+
+    AWS_ACCESS_KEY_ID = SUPABASE_S3_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = SUPABASE_S3_SECRET_ACCESS_KEY
     AWS_STORAGE_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME")
     AWS_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL")
 
@@ -168,6 +172,7 @@ if USE_SUPABASE:
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
+
 
 
 # ===============================
