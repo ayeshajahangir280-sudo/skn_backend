@@ -142,14 +142,19 @@ SUPABASE_SERVICE_ROLE_KEY = env('SUPABASE_SERVICE_ROLE_KEY', default=env('SUPABA
 if USE_SUPABASE:
     # Supabase Storage (S3-compatible) configuration using Service Role Key
     # Service Role Key is required for backend metadata operations (e.g. HeadObject)
-    AWS_ACCESS_KEY_ID = 'supabase'
-    AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_ROLE_KEY
-    AWS_STORAGE_BUCKET_NAME = env('SUPABASE_S3_BUCKET_NAME', default='')
-    AWS_S3_ENDPOINT_URL = env('SUPABASE_S3_ENDPOINT_URL', default='')
-    AWS_S3_REGION_NAME = env('SUPABASE_S3_REGION_NAME', default='us-east-1')
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = None
-    AWS_S3_VERIFY = True
+    SUPABASE_URL = env("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY")
+
+AWS_ACCESS_KEY_ID = "supabase"
+AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_ROLE_KEY
+AWS_STORAGE_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME")
+AWS_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL")
+AWS_S3_REGION_NAME = "us-east-1"
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+
+MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
 
 # Storage configuration for Django 4.2+ (including 6.0)
 STORAGES = {
