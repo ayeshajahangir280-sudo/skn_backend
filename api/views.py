@@ -66,7 +66,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         order = serializer.save()
-        # send_order_confirmation_email(order) # Removed: Send only when admin marks as Paid
+        send_order_confirmation_email(order)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -172,6 +172,9 @@ def create_checkout_session(request):
         total_amount += shipping_cost
         order.total = total_amount
         order.save()
+
+        # Send Confirmation Email
+        send_order_confirmation_email(order)
 
         # Add shipping as a line item if > 0
         if shipping_cost > 0:
