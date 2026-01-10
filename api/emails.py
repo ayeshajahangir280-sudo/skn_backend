@@ -38,11 +38,23 @@ def send_order_confirmation_email(order):
     plain_message = strip_tags(html_message)
     
     try:
+        # Send to customer
         send_mail(
             subject=subject,
             message=plain_message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[order.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        
+        # Send notification to admin
+        admin_subject = f'NEW ORDER RECEIVED: #{order.id}'
+        send_mail(
+            subject=admin_subject,
+            message=plain_message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.EMAIL_HOST_USER],
             html_message=html_message,
             fail_silently=False,
         )
