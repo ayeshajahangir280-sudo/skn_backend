@@ -66,7 +66,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         order = serializer.save()
-        send_order_confirmation_email(order)
+        # send_order_confirmation_email(order) # Removed: Send only when admin marks as Paid
 
 @csrf_exempt
 @api_view(['POST'])
@@ -226,9 +226,12 @@ def stripe_webhook(request):
         if order_id:
             try:
                 order = Order.objects.get(id=order_id)
-                order.status = 'paid'
-                order.save()
-                send_order_confirmation_email(order)
+                # We no longer mark it as paid automatically.
+                # Admin will do it manually.
+                # order.status = 'paid'
+                # order.save()
+                # send_order_confirmation_email(order)
+                print(f"Payment completed for order {order_id}. Awaiting admin verification.")
             except Order.DoesNotExist:
                 pass
 

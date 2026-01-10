@@ -84,6 +84,7 @@ CORS_ALLOW_HEADERS = [
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://skn-admin.vercel.app",
+    "https://skn-beta.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
@@ -201,4 +202,4 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Stripe Settings
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')
+FRONTEND_URL = env('FRONTEND_URL', default='https://skn-beta.vercel.app')

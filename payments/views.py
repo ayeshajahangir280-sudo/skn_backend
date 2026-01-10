@@ -38,8 +38,8 @@ def create_checkout_session(request):
                 }
             ],
             # When payment succeeds/cancels, Stripe will send user back here:
-            success_url="https://skn-beta.vercel.app/order-confirmation",
-            cancel_url="https://skn-beta.vercel.app/checkout",
+            success_url=settings.FRONTEND_URL + "/order-confirmation?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=settings.FRONTEND_URL + "/checkout",
         )
 
         return JsonResponse({"url": checkout_session.url})
