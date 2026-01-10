@@ -1,7 +1,12 @@
 import os
+import certifi
 from pathlib import Path
 import environ
 import dj_database_url
+
+# Force SSL certificates to be found
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
 # Initialize environ
 env = environ.Env(
@@ -19,7 +24,9 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-default-change-me-in-pro
 
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '.koyeb.app'])
+ALLOWED_HOSTS = ['*']
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 
 # Application definition
 
@@ -35,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'api',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -53,17 +61,32 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'core.urls'
 
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://localhost:5173", # Common Vite port
-    "http://127.0.0.1:5173",
-    "https://skn-admin.vercel.app",
+CORS_ORIGIN_ALLOW_ALL = True # For backward compatibility
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://skn-admin.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
-CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -115,35 +138,54 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# Media files
+# ===============================
+# Media files / Supabase Storage
+# ===============================
+
+
 USE_SUPABASE = env.bool('USE_SUPABASE', default=False)
-SUPABASE_KEY = env('SUPABASE_KEY', default='')
 
 if USE_SUPABASE:
-    # Supabase Storage (S3-compatible) configuration using Anon Key
-    AWS_ACCESS_KEY_ID = 'supabase'
-    AWS_SECRET_ACCESS_KEY = SUPABASE_KEY
-    AWS_STORAGE_BUCKET_NAME = env('SUPABASE_S3_BUCKET_NAME', default='')
-    AWS_S3_ENDPOINT_URL = env('SUPABASE_S3_ENDPOINT_URL', default='')
-    AWS_S3_REGION_NAME = env('SUPABASE_S3_REGION_NAME', default='us-east-1')
+    SUPABASE_URL = env("SUPABASE_URL")
+
+    # NEW: real S3 access keys from Supabase Storage → Settings → S3 access keys
+    SUPABASE_S3_ACCESS_KEY_ID = env("SUPABASE_S3_ACCESS_KEY_ID")
+    SUPABASE_S3_SECRET_ACCESS_KEY = env("SUPABASE_S3_SECRET_ACCESS_KEY")
+
+    AWS_ACCESS_KEY_ID = SUPABASE_S3_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = SUPABASE_S3_SECRET_ACCESS_KEY
+    AWS_STORAGE_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME")
+    AWS_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL")
+
+    AWS_S3_REGION_NAME = "us-east-1"
+    AWS_S3_ADDRESSING_STYLE = "path"
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",
+    }
     AWS_DEFAULT_ACL = None
     AWS_S3_VERIFY = True
 
-# Storage configuration for Django 4.2+ (including 6.0)
+    MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
+
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = '/media/'
+
+
+
+# ===============================
+# Storage configuration
+# ===============================
 STORAGES = {
     "default": {
-        "BACKEND": "core.storage.SupabaseStorage" if USE_SUPABASE else "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-
-if not USE_SUPABASE:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-MEDIA_URL = f"{env('SUPABASE_S3_ENDPOINT_URL', default='')}/{env('SUPABASE_S3_BUCKET_NAME', default='')}/" if USE_SUPABASE else '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

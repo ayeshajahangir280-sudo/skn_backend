@@ -7,13 +7,25 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name', 'description', 'image']
 
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ['id', 'image']
 
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+
 class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_name = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=1000000, allow_empty_file=False, use_url=False),
@@ -28,12 +40,23 @@ class ProductSerializer(serializers.ModelSerializer):
             'images', 'uploaded_images', 'created_at'
         ]
 
+    def get_category_name(self, obj):
+        try:
+            if hasattr(obj, 'category') and obj.category:
+                return obj.category.name
+        except Exception:
+            pass
+        return None
+
     def create(self, validated_data):
-        uploaded_images = validated_data.pop('uploaded_images', [])
-        product = Product.objects.create(**validated_data)
-        for image in uploaded_images:
-            ProductImage.objects.create(product=product, image=image)
-        return product
+        try:
+            uploaded_images = validated_data.pop('uploaded_images', [])
+            product = Product.objects.create(**validated_data)
+            for image in uploaded_images:
+                ProductImage.objects.create(product=product, image=image)
+            return product
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
 
 class CollectionSerializer(serializers.ModelSerializer):
     products = serializers.PrimaryKeyRelatedField(
@@ -45,6 +68,12 @@ class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = ['id', 'name', 'description', 'image', 'products']
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
