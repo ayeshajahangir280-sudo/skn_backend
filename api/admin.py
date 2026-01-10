@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Product, ProductImage, Collection, Order, OrderItem, Category
 
+from .emails import send_order_confirmation_email
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
@@ -34,3 +36,11 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('id', 'first_name', 'last_name', 'email')
     readonly_fields = ('created_at',)
     inlines = [OrderItemInline]
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            old_obj = Order.objects.get(pk=obj.pk)
+            # If status is being changed to 'paid' from something else
+            if old_obj.status != 'paid' and obj.status == 'paid':
+                send_order_confirmation_email(obj)
+        super().save_model(request, obj, form, change)
