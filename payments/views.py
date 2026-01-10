@@ -29,7 +29,7 @@ def create_checkout_session(request):
         if not items_data:
             return JsonResponse({"error": "Items are required"}, status=400)
 
-        shipping_cost = Decimal(str(data.get("shipping_cost", 0)))
+        shipping_cost = Decimal(str(data.get("shipping_cost") or 0))
         email = data.get("email")
         first_name = data.get("firstName")
         last_name = data.get("lastName")
@@ -44,7 +44,7 @@ def create_checkout_session(request):
 
         for item in items_data:
             product_id = item.get("product", {}).get("id")
-            quantity = item.get("quantity", 1)
+            quantity = item.get("quantity") or 1
             
             try:
                 product = Product.objects.get(id=product_id)

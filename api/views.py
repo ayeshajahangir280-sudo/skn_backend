@@ -13,6 +13,7 @@ from .serializers import (
 from .emails import send_order_confirmation_email
 import stripe
 from django.conf import settings
+from decimal import Decimal
 
 stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', 'your_stripe_secret_key_here')
 
@@ -121,10 +122,10 @@ def create_checkout_session(request):
         country = data.get('country', '')
         postal_code = data.get('postalCode', '')
         phone = data.get('phone', '')
-        shipping_cost = data.get('shipping_cost', 0)
+        shipping_cost = Decimal(str(data.get('shipping_cost') or 0))
 
         # Create order in database first
-        total_amount = 0
+        total_amount = Decimal('0.00')
         order = Order.objects.create(
             first_name=first_name,
             last_name=last_name,
@@ -142,7 +143,7 @@ def create_checkout_session(request):
         line_items = []
         for item in items:
             product_id = item.get('product', {}).get('id')
-            quantity = item.get('quantity', 1)
+            quantity = int(item.get('quantity') or 1)
             product = Product.objects.get(id=product_id)
             
             price = product.price
