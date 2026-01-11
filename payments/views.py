@@ -102,7 +102,7 @@ def create_checkout_session(request):
             line_items=[
                 {
                     "price_data": {
-                        "currency": "usd",
+                        "currency": "eur",
                         "product_data": {
                             "name": "SKN Hair Care Order",
                             "description": f"Order #{order.id}",
@@ -211,9 +211,9 @@ def generate_receipt_pdf(request, order_id):
     # Totals
     subtotal = order.total - order.shipping
     totals_data = [
-        ["", "", "Subtotal", f"${subtotal:.2f}"],
-        ["", "", "Shipping", f"${order.shipping:.2f}"],
-        ["", "", Paragraph("Total (USD)", bold_style), Paragraph(f"${order.total:.2f}", bold_style)],
+        ["", "", "Subtotal", f"€{subtotal:.2f}"],
+        ["", "", "Shipping", f"€{order.shipping:.2f}"],
+        ["", "", Paragraph("Total (eur)", bold_style), Paragraph(f"€{order.total:.2f}", bold_style)],
     ]
     totals_table = Table(totals_data, colWidths=[0.6*inch, 3.4*inch, 1.25*inch, 1.25*inch])
     totals_table.setStyle(TableStyle([
