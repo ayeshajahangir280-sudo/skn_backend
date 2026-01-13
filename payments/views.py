@@ -55,7 +55,9 @@ def create_checkout_session(request):
 
         rate = CURRENCY_RATES[currency]
 
+        # shipping comes in "base" currency (USD in your frontend), then converted
         shipping_cost = Decimal(str(data.get("shipping_cost") or 0)) * rate
+
         email = data.get("email")
         first_name = data.get("firstName")
         last_name = data.get("lastName")
@@ -68,30 +70,47 @@ def create_checkout_session(request):
         subtotal = Decimal("0.00")
         order_items_to_create = []
 
+        # =========================
+        # USE PRICE FROM CHECKOUT (unit_price)
+        # =========================
         for item in items_data:
             product_id = item.get("product", {}).get("id")
-            quantity = item.get("quantity") or 1
+            quantity = int(item.get("quantity") or 1)
+
+            # this MUST be sent from the frontend
+            unit_price = item.get("unit_price")
+            if unit_price is None:
+                return JsonResponse(
+                    {"error": "unit_price is required for each item"},
+                    status=400,
+                )
 
             try:
                 product = Product.objects.get(id=product_id)
-
-                converted_price = Decimal(str(product.price)) * rate
-                item_total = converted_price * Decimal(str(quantity))
-                subtotal += item_total
-
-                order_items_to_create.append({
-                    "product": product,
-                    "name": product.name,
-                    "price": converted_price,
-                    "quantity": quantity,
-                    "image_url": product.image.url if product.image else ""
-                })
-
             except Product.DoesNotExist:
                 return JsonResponse(
                     {"error": f"Product with id {product_id} not found"},
-                    status=404
+                    status=404,
                 )
+
+            # price coming from frontend (base currency, e.g. USD)
+            frontend_price = Decimal(str(unit_price))
+
+            # convert to selected currency
+            converted_price = frontend_price * rate
+
+            item_total = converted_price * Decimal(str(quantity))
+            subtotal += item_total
+
+            order_items_to_create.append(
+                {
+                    "product": product,
+                    "name": product.name,
+                    "price": converted_price,  # stored in chosen currency
+                    "quantity": quantity,
+                    "image_url": product.image.url if product.image else "",
+                }
+            )
 
         total = subtotal + shipping_cost
 
@@ -109,8 +128,8 @@ def create_checkout_session(request):
             phone=phone,
             total=total,
             shipping=shipping_cost,
-            currency=currency,  # ✅ ADD FIELD IN MODEL
-            status="pending"
+            currency=currency,
+            status="pending",
         )
 
         # =========================
@@ -123,7 +142,7 @@ def create_checkout_session(request):
                 name=item_data["name"],
                 price=item_data["price"],
                 quantity=item_data["quantity"],
-                image_url=item_data["image_url"]
+                image_url=item_data["image_url"],
             )
 
         # =========================
@@ -134,7 +153,7 @@ def create_checkout_session(request):
         # =========================
         # STRIPE SESSION
         # =========================
-        stripe_amount = int(total * 100)
+        stripe_amount = int(total * 100)  # Stripe wants smallest currency unit
 
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
@@ -153,7 +172,8 @@ def create_checkout_session(request):
                     "quantity": 1,
                 }
             ],
-            success_url=settings.FRONTEND_URL + "/order-confirmation?session_id={CHECKOUT_SESSION_ID}",
+            success_url=settings.FRONTEND_URL
+            + "/order-confirmation?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=settings.FRONTEND_URL + "/checkout",
         )
 
