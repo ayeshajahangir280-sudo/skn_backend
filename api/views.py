@@ -144,9 +144,13 @@ def create_checkout_session(request):
         for item in items:
             product_id = item.get('product', {}).get('id')
             quantity = int(item.get('quantity') or 1)
+            unit_price = item.get('unit_price')
+            if unit_price is None:
+                return Response({'error': 'unit_price is required for each item'}, status=status.HTTP_400_BAD_REQUEST)
             product = Product.objects.get(id=product_id)
             
-            price = product.price
+            # Use frontend-provided price for this checkout
+            price = Decimal(str(unit_price))
             total_amount += price * quantity
             
             OrderItem.objects.create(
