@@ -58,6 +58,16 @@ class ProductSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(str(e))
 
+    def update(self, instance, validated_data):
+        try:
+            uploaded_images = validated_data.pop('uploaded_images', [])
+            instance = super().update(instance, validated_data)
+            for image in uploaded_images:
+                ProductImage.objects.create(product=instance, image=image)
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+
 class CollectionSerializer(serializers.ModelSerializer):
     products = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
