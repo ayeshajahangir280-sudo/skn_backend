@@ -3,6 +3,7 @@ from rest_framework.decorators import action, api_view, permission_classes, auth
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
+from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import Product, Collection, Order, OrderItem, Category
@@ -106,6 +107,17 @@ def logout_view(request):
 @permission_classes([permissions.IsAuthenticated])
 def current_user_view(request):
     return Response(UserSerializer(request.user).data)
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([])
+def keep_alive(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT 1;')
+        cursor.fetchone()
+
+    return Response({'status': 'alive'})
 
 @csrf_exempt
 @api_view(['POST'])

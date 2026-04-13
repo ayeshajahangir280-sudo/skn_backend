@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ProductViewSet, CollectionViewSet, OrderViewSet, CategoryViewSet,
     LoginView, LogoutView, CurrentUserView, RegisterView,
-    create_checkout_session, stripe_webhook
+    create_checkout_session, keep_alive, stripe_webhook
 )
 
 router = DefaultRouter()
@@ -18,6 +18,7 @@ urlpatterns = [
     path('login/', LoginView, name='login'),
     path('logout/', LogoutView, name='logout'),
     path('me/', CurrentUserView, name='me'),
+    path('keep-alive/', keep_alive, name='keep-alive'),
     path('payments/create-checkout-session/', create_checkout_session, name='create-checkout-session'),
     path('payments/webhook/', stripe_webhook, name='stripe-webhook'),
 ]
