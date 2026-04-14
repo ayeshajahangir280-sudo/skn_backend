@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
 from django.db import connection
+from django.db.utils import DatabaseError
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import Product, Collection, Order, OrderItem, Category
@@ -113,11 +114,19 @@ def current_user_view(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes([])
 def keep_alive(request):
-    with connection.cursor() as cursor:
-        cursor.execute('SELECT 1;')
-        cursor.fetchone()
+    response_data = {'status': 'alive', 'database': 'unknown'}
 
-    return Response({'status': 'alive'})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1;')
+            cursor.fetchone()
+        response_data['database'] = 'ok'
+    except DatabaseError:
+        # Keep the endpoint useful as an app liveness probe even if the DB is
+        # temporarily unavailable during cold starts or brief outages.
+        response_data['database'] = 'unavailable'
+
+    return Response(response_data)
 
 @csrf_exempt
 @api_view(['POST'])
