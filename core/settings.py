@@ -146,17 +146,28 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 USE_SUPABASE = env.bool('USE_SUPABASE', default=False)
 
-if USE_SUPABASE:
-    SUPABASE_URL = env("SUPABASE_URL")
+SUPABASE_URL = env("SUPABASE_URL", default="")
+SUPABASE_S3_ACCESS_KEY_ID = env("SUPABASE_S3_ACCESS_KEY_ID", default="")
+SUPABASE_S3_SECRET_ACCESS_KEY = env("SUPABASE_S3_SECRET_ACCESS_KEY", default="")
+SUPABASE_S3_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME", default="")
+SUPABASE_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL", default="")
+
+SUPABASE_STORAGE_CONFIGURED = all([
+    USE_SUPABASE,
+    SUPABASE_URL,
+    SUPABASE_S3_ACCESS_KEY_ID,
+    SUPABASE_S3_SECRET_ACCESS_KEY,
+    SUPABASE_S3_BUCKET_NAME,
+    SUPABASE_S3_ENDPOINT_URL,
+])
+
+if SUPABASE_STORAGE_CONFIGURED:
 
     # NEW: real S3 access keys from Supabase Storage → Settings → S3 access keys
-    SUPABASE_S3_ACCESS_KEY_ID = env("SUPABASE_S3_ACCESS_KEY_ID")
-    SUPABASE_S3_SECRET_ACCESS_KEY = env("SUPABASE_S3_SECRET_ACCESS_KEY")
-
     AWS_ACCESS_KEY_ID = SUPABASE_S3_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY = SUPABASE_S3_SECRET_ACCESS_KEY
-    AWS_STORAGE_BUCKET_NAME = env("SUPABASE_S3_BUCKET_NAME")
-    AWS_S3_ENDPOINT_URL = env("SUPABASE_S3_ENDPOINT_URL")
+    AWS_STORAGE_BUCKET_NAME = SUPABASE_S3_BUCKET_NAME
+    AWS_S3_ENDPOINT_URL = SUPABASE_S3_ENDPOINT_URL
 
     AWS_S3_REGION_NAME = "us-east-1"
     AWS_S3_ADDRESSING_STYLE = "path"
@@ -181,7 +192,11 @@ else:
 # ===============================
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "BACKEND": (
+            "storages.backends.s3boto3.S3Boto3Storage"
+            if SUPABASE_STORAGE_CONFIGURED
+            else "django.core.files.storage.FileSystemStorage"
+        ),
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
